@@ -3,6 +3,7 @@ package dao
 import (
 	"github.com/daiguadaidai/poow/pili/gdbc"
 	"github.com/daiguadaidai/poow/pili/models"
+	"github.com/daiguadaidai/poow/utils"
 	"github.com/jinzhu/gorm"
 )
 
@@ -48,4 +49,13 @@ func (this *TaskDao) UpdateByUUID(task *models.Task) error {
 	}
 
 	return nil
+}
+
+func (this *TaskDao) QueryByProgramID(pk int64, pg *utils.Paginator) ([]models.Task, error) {
+	tasks := []models.Task{}
+	if err := this.DB.Model(&models.Task{}).Where("program_id = ?", pk).
+		Offset(pg.Offset).Limit(pg.Limit).Find(&tasks).Error; err != nil {
+		return make([]models.Task, 0), err
+	}
+	return tasks, nil
 }

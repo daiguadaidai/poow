@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"github.com/daiguadaidai/poow/pili/models"
 	"github.com/daiguadaidai/poow/utils/types"
-	"github.com/gin-gonic/gin"
-	"strings"
 )
 
 type TaskStartForm struct {
@@ -28,15 +26,6 @@ func (this TaskStartForm) GetPostData(uuid string) map[string]interface{} {
 	data["params"] = fmt.Sprintf("%s %s", this.Params, params)
 
 	return data
-}
-
-// 获取参数
-func GetParam(c *gin.Context, key string) (string, error) {
-	v := c.Param(key)
-	if strings.TrimSpace(v) == "" {
-		return "", fmt.Errorf("必须输入参数 %s 值")
-	}
-	return v, nil
 }
 
 // update form

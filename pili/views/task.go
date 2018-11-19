@@ -22,6 +22,7 @@ func (this *TaskHandler) RegisterV1(group *gin.RouterGroup) {
 	group.GET("/fail/:uuid", this.TaskFail)
 	group.GET("/running/:uuid", this.TaskRunning)
 	group.GET("/tail", this.TaskTail)
+	group.GET("/program/:pk", this.QueryByProgram)
 }
 
 type TaskHandler struct{}
@@ -123,4 +124,22 @@ func (this *TaskHandler) TaskTail(c *gin.Context) {
 	}
 
 	returnSuccess(c, data)
+}
+
+// 通过
+func (this *TaskHandler) QueryByProgram(c *gin.Context) {
+	pk, err := form.GetParamInt64(c, "pk")
+	if err != nil {
+		returnError(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	pg := form.ParsePaginator(c)
+	tasks, err := controllers.NewTaskController().QueryByProgramID(pk, pg)
+	if err != nil {
+		returnError(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	returnSuccess(c, tasks)
 }

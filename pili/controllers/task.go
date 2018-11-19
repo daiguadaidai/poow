@@ -132,3 +132,8 @@ func (this *TaskController) TailFile(f *form.TailForm) (string, error) {
 
 	return d.(string), nil
 }
+
+// 查询通过program id task
+func (this *TaskController) QueryByProgramID(pk int64, pg *utils.Paginator) ([]models.Task, error) {
+	return dao.NewTaskDao().QueryByProgramID(pk, pg)
+}

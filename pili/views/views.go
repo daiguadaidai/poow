@@ -1,40 +1,9 @@
 package views
 
 import (
-	"net/http"
-	"strconv"
-
-	"github.com/daiguadaidai/poow/utils"
 	"github.com/gin-gonic/gin"
+	"net/http"
 )
-
-const (
-	defaultStrPage    = "1"
-	defaultStrPerPage = "100"
-	defaultPage       = 1
-	defaultPerPage    = 100
-	maxPerPage        = 1000
-)
-
-func parsePaginator(c *gin.Context) *utils.Paginator {
-	strPage := c.DefaultQuery("page", defaultStrPage)
-	page, err := strconv.ParseUint(strPage, 10, 64)
-	if err != nil {
-		page, _ = strconv.ParseUint(defaultStrPage, 10, 64)
-	}
-	if page <= 0 {
-		page = defaultPage
-	}
-	strPerPage := c.DefaultQuery("per_page", defaultStrPerPage)
-	perPage, err := strconv.ParseUint(strPerPage, 10, 64)
-	if err != nil {
-		perPage, _ = strconv.ParseUint(defaultStrPerPage, 10, 64)
-	}
-	if perPage > maxPerPage {
-		perPage = maxPerPage
-	}
-	return utils.NewPaginator(uint64((page-1)*perPage), uint64(perPage))
-}
 
 type response struct {
 	Status  bool        `json:"status"`
