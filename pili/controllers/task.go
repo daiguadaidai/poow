@@ -24,11 +24,11 @@ func NewTaskController() *TaskController {
 	}
 }
 
-func (this *TaskController) Start(f *form.TaskStartForm) error {
+func (this *TaskController) Start(f *form.TaskStartForm) (*models.Task, error) {
 	// 获取执行的命令
 	p, err := dao.NewProgramDao().GetByName(f.Program, []string{"id", "have_dedicate"})
 	if err != nil {
-		return fmt.Errorf("获取命令出错: %s. %v", f.Program, err)
+		return nil, fmt.Errorf("获取命令出错: %s. %v", f.Program, err)
 	}
 
 	// 获取执行命令的机器
@@ -36,7 +36,7 @@ func (this *TaskController) Start(f *form.TaskStartForm) error {
 	cols := []string{"hosts.id", "hosts.host"}
 	h, err := hostDao.GetByProgramIDAndDedicate(p.ID.Int64, p.HaveDedicate, cols)
 	if err != nil {
-		return fmt.Errorf("失去执行命令机器失败. %v", err)
+		return nil, fmt.Errorf("失去执行命令机器失败. %v", err)
 	}
 
 	// POST 启动命令URL/参数
@@ -55,7 +55,7 @@ func (this *TaskController) Start(f *form.TaskStartForm) error {
 		Status:    types.NewNullInt64(models.TASK_STATUS_RUNNING, false),
 	}
 	if err := dao.NewTaskDao().Create(task); err != nil {
-		return fmt.Errorf("创建任务失败. %v, %v. %v", postData["program"],
+		return nil, fmt.Errorf("创建任务失败. %v, %v. %v", postData["program"],
 			postData["params"], err)
 	}
 
@@ -64,9 +64,9 @@ func (this *TaskController) Start(f *form.TaskStartForm) error {
 		switch err.(type) {
 		case *url.Error:
 			hostDao.UpdateIsValidByHost(task.Host.String, false)
-			return fmt.Errorf("执行任务机器不可用. %s. %v", task.Host.String, err)
+			return task, fmt.Errorf("执行任务机器不可用. %s. %v", task.Host.String, err)
 		}
-		return err
+		return task, err
 	}
 
 	// host 正在运行该任务数 +1
@@ -74,7 +74,7 @@ func (this *TaskController) Start(f *form.TaskStartForm) error {
 		seelog.Warnf("任务启动成功. 添加当前host(%v)任务数失败", h.Host.String)
 	}
 
-	return nil
+	return task, nil
 }
 
 // 更新任务状态

@@ -35,12 +35,13 @@ func (this *TaskHandler) Start(c *gin.Context) {
 	}
 
 	// 开始任务
-	if err := controllers.NewTaskController().Start(f.(*form.TaskStartForm)); err != nil {
+	t, err := controllers.NewTaskController().Start(f.(*form.TaskStartForm))
+	if err != nil {
 		returnError(c, http.StatusInternalServerError, err)
 		return
 	}
 
-	returnSuccess(c, nil)
+	returnSuccess(c, t)
 }
 
 // 标记任务成功
