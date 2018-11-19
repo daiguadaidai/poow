@@ -50,44 +50,44 @@ func GetTask(uuid string) (interface{}, bool) {
 }
 
 // 开始一个任务task
-func (t *Task) Start() {
-	t.InitLogFile()
-	defer t.LogFile.Close()
+func (this *Task) Start() {
+	this.InitLogFile()
+	defer this.LogFile.Close()
 
-	if err := t.UpdateLogPath(); err != nil {
-		seelog.Error(err.Error())
+	if err := this.UpdateLogPath(); err != nil {
+		this.LogErrorf(err.Error())
 	}
 
 	// 检测命令是否存在
-	if err := t.CheckAndDownloadProgram(); err != nil {
-		t.TaskRunFail(err)
+	if err := this.CheckAndDownloadProgram(); err != nil {
+		this.TaskRunFail(err)
 		return
 	}
 
 	// 检测命令是否有执行权限
-	if err := t.CheckProgramIsExecutable(); err != nil {
-		t.TaskRunFail(err)
+	if err := this.CheckProgramIsExecutable(); err != nil {
+		this.TaskRunFail(err)
 		return
 	}
 
 	// 运行
-	if err := t.Run(); err != nil {
-		t.TaskRunFail(err)
+	if err := this.Run(); err != nil {
+		this.TaskRunFail(err)
 		return
 	}
 
-	t.TaskRunSuccess()
+	this.TaskRunSuccess()
 }
 
 // 运行命令
-func (t *Task) Run() error {
+func (this *Task) Run() error {
 	wg := new(sync.WaitGroup) // 再次创建一个并发控制器. 只提供运行命令中使用
 
 	// 获取命令路经
-	cmdPath := t.SC.GetProgramFilePath(t.Program)
-	args, err := utils.GetArgs(t.Params)
+	cmdPath := this.SC.GetProgramFilePath(this.Program)
+	args, err := utils.GetArgs(this.Params)
 	if err != nil {
-		return fmt.Errorf("解析命令参数出错. params: %s. %v", t.Params, err)
+		return fmt.Errorf("解析命令参数出错. params: %s. %v", this.Params, err)
 	}
 	// 创建命令执行器
 	cmd := exec.Command(cmdPath, args...)
@@ -97,52 +97,52 @@ func (t *Task) Run() error {
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		return fmt.Errorf("获取输出管道错误. task uuid: %s. %s %s. %v",
-			t.TaskUUID, cmdPath, t.Params, err)
+			this.TaskUUID, cmdPath, this.Params, err)
 	}
 
 	stderr, err := cmd.StderrPipe()
 	if err != nil {
 		return fmt.Errorf("获取<错误>输出管道错误. task uuid: %s. %s %s. %v",
-			t.TaskUUID, cmdPath, t.Params, err)
+			this.TaskUUID, cmdPath, this.Params, err)
 	}
 
 	// 开始执行命令
 	if err := cmd.Start(); err != nil {
 		return fmt.Errorf("启动命令出错. task uuid: %s. %s %s. %v",
-			t.TaskUUID, cmdPath, t.Params, err)
+			this.TaskUUID, cmdPath, this.Params, err)
 	}
-	seelog.Infof("命令执行中. pid: %v. task uuid: %s. %s %s",
-		cmd.Process.Pid, t.TaskUUID, cmdPath, t.Params)
+	this.LogInfof("命令执行中. pid: %v. task uuid: %s. %s %s",
+		cmd.Process.Pid, this.TaskUUID, cmdPath, this.Params)
 
 	// 保存执行命令 pid
-	CacheTask(t.TaskUUID, cmd.Process.Pid)
+	CacheTask(this.TaskUUID, cmd.Process.Pid)
 	defer func() {
-		DestroyTask(t.TaskUUID)
+		DestroyTask(this.TaskUUID)
 	}()
 
 	// 记录命令的输出
 	wg.Add(1)
-	go t.LogOutput(wg, stdout)
+	go this.LogOutput(wg, stdout)
 	wg.Add(1)
-	go t.LogOutput(wg, stderr)
+	go this.LogOutput(wg, stderr)
 
 	wg.Wait()
 	// 等待结束
 	if err := cmd.Wait(); err != nil {
-		seelog.Errorf("Wait err: %v", err)
+		this.LogErrorf("Wait err: %v", err)
 	}
 
 	// 执行失败
 	if !cmd.ProcessState.Success() {
 		return fmt.Errorf("命令执行失败. pid: %v. task uuid: %s. %s %s",
-			cmd.Process.Pid, t.TaskUUID, cmdPath, t.Params)
+			cmd.Process.Pid, this.TaskUUID, cmdPath, this.Params)
 	}
 
 	return nil
 }
 
 // 出入info日志
-func (t *Task) LogOutput(_wg *sync.WaitGroup, _stdout io.ReadCloser) {
+func (this *Task) LogOutput(_wg *sync.WaitGroup, _stdout io.ReadCloser) {
 	defer _wg.Done()
 
 	outputBuf := bufio.NewReader(_stdout)
@@ -152,104 +152,124 @@ func (t *Task) LogOutput(_wg *sync.WaitGroup, _stdout io.ReadCloser) {
 			if err == io.EOF {
 				break
 			} else {
-				fmt.Printf("Error: 获取输出错误. %v\n", err)
+				this.LogErrorf("获取输出错误. %v", err)
 				return
 			}
 		}
-		t.Log(string(output))
+		this.Log(string(output))
 	}
 }
 
 // 检测和下载命令
-func (t *Task) CheckAndDownloadProgram() error {
-	commandPath := fmt.Sprintf("%s/%s", t.SC.ProgramPath, t.Program)
+func (this *Task) CheckAndDownloadProgram() error {
+	commandPath := fmt.Sprintf("%s/%s", this.SC.ProgramPath, this.Program)
 	exists, err := utils.PathExists(commandPath)
 	if err != nil {
 		return err
 	}
 	if !exists {
-		seelog.Warnf("命令不存在: %s", t.Program)
-		if err1 := utils.DownloadFile(t.SC.GetPiliDownloadProgramURL(t.Program), commandPath); err1 != nil {
-			return fmt.Errorf("%v. %s", err1, t.SC.GetPiliDownloadProgramURL(t.Program))
+		this.LogWarnf("命令不存在: %s", this.Program)
+		if err1 := utils.DownloadFile(this.SC.GetPiliDownloadProgramURL(this.Program), commandPath); err1 != nil {
+			return fmt.Errorf("%v. %s", err1, this.SC.GetPiliDownloadProgramURL(this.Program))
 		}
-		seelog.Warnf("命令下载成功: %s", t.Program)
+		this.LogWarnf("命令下载成功: %s", this.Program)
 	}
 
 	return nil
 }
 
-func (t *Task) CheckProgramIsExecutable() error {
-	commandPath := fmt.Sprintf("%s/%s", t.SC.ProgramPath, t.Program)
+func (this *Task) CheckProgramIsExecutable() error {
+	commandPath := fmt.Sprintf("%s/%s", this.SC.ProgramPath, this.Program)
 	executable, err := utils.FileIsExecutable(commandPath)
 	if err != nil {
 		return err
 	}
 	if !executable {
-		seelog.Warnf("命令不可执行: %s", t.Program)
+		this.LogWarnf("命令不可执行: %s", this.Program)
 		if err1 := utils.ChmodFile(commandPath); err1 != nil {
 			return err1
 		}
-		seelog.Warnf("命令可执行权限设置成功: %s", t.Program)
+		this.LogWarnf("命令可执行权限设置成功: %s", this.Program)
 	}
 
 	return nil
 }
 
 // 通知任务执行成功
-func (t *Task) TaskRunSuccess() {
-	if _, err := utils.GetURL(t.SC.GetPiliTaskSuccessURL(t.TaskUUID), ""); err != nil {
-		seelog.Errorf("通知失败<任务完成>. UUID: %s, command: %s, params: %s. %v",
-			t.TaskUUID, t.Program, t.Params, err)
+func (this *Task) TaskRunSuccess() {
+	if _, err := utils.GetURL(this.SC.GetPiliTaskSuccessURL(this.TaskUUID), ""); err != nil {
+		this.LogErrorf("通知失败<任务完成>. UUID: %s, command: %s, params: %s. %v",
+			this.TaskUUID, this.Program, this.Params, err)
 		return
 	}
 
-	seelog.Infof("通知成功<任务完成>. UUID: %s, command: %s, params: %s",
-		t.TaskUUID, t.Program, t.Params)
+	this.LogInfof("通知成功<任务完成>. UUID: %s, command: %s, params: %s",
+		this.TaskUUID, this.Program, this.Params)
 }
 
 // 通知任务执行失败
-func (t *Task) TaskRunFail(_err error) {
-	seelog.Errorf("%v", _err)
+func (this *Task) TaskRunFail(err error) {
+	this.LogErrorf(err.Error())
 
-	if _, err := utils.GetURL(t.SC.GetPiliTaskFailURL(t.TaskUUID), ""); err != nil {
-		seelog.Errorf("通知失败<任务执行失败>. UUID: %s, command: %s, params: %s. %v",
-			t.TaskUUID, t.Program, t.Params, err)
+	if _, err := utils.GetURL(this.SC.GetPiliTaskFailURL(this.TaskUUID), ""); err != nil {
+		this.LogErrorf("通知失败<任务执行失败>. UUID: %s, command: %s, params: %s. %v",
+			this.TaskUUID, this.Program, this.Params, err)
 		return
 	}
 
-	seelog.Infof("通知成功<任务执行失败>. UUID: %s, command: %s, params: %s",
-		t.TaskUUID, t.Program, t.Params)
+	this.LogInfof("通知成功<任务执行失败>. UUID: %s, command: %s, params: %s",
+		this.TaskUUID, this.Program, this.Params)
 }
 
 // 初始化日志文件
-func (t *Task) InitLogFile() {
-	t.LogPath = t.SC.GetLogPath(t.TaskUUID)
-	seelog.Infof("任务: %s. 命令: %s. 输出文件: %s", t.TaskUUID, t.Program, t.LogPath)
+func (this *Task) InitLogFile() {
+	this.LogPath = this.SC.GetLogPath(this.TaskUUID)
+	seelog.Infof("任务: %s. 命令: %s. 输出文件: %s", this.TaskUUID, this.Program, this.LogPath)
 
 	var err error
-	t.LogFile, err = os.Create(t.LogPath)
+	this.LogFile, err = os.OpenFile(this.LogPath, os.O_CREATE|os.O_APPEND|os.O_RDWR, 0666)
 	if err != nil {
 		seelog.Errorf("创建错误日志文件失败. task uuid: %s. logfile: %s",
-			t.TaskUUID, t.LogPath)
+			this.TaskUUID, this.LogPath)
 		return
 	}
 }
 
-// 记录输出信息
-func (t *Task) Log(info string) {
-	if _, err := fmt.Fprintln(t.LogFile, info); err != nil {
-		seelog.Errorf("写入自建日志出错. %v", err)
-	}
-}
-
-func (t *Task) UpdateLogPath() error {
+func (this *Task) UpdateLogPath() error {
 	data := make(map[string]string)
-	data["task_uuid"] = t.TaskUUID
-	data["log_path"] = t.LogPath
+	data["task_uuid"] = this.TaskUUID
+	data["log_path"] = this.LogPath
 
-	if _, err := utils.PutURL(t.SC.GetPiliTaskUpdateURL(), data); err != nil {
+	if _, err := utils.PutURL(this.SC.GetPiliTaskUpdateURL(), data); err != nil {
 		return fmt.Errorf("更新任务日志地址出错: %v", err)
 	}
 
 	return nil
+}
+
+func (this *Task) Log(info string) {
+	if _, err := fmt.Fprintln(this.LogFile, info); err != nil {
+		seelog.Errorf("写入自建日志出错. %v", err)
+	}
+}
+
+// 记录输出信息
+func (this *Task) LogInfof(format string, params ...interface{}) {
+	msg := fmt.Sprintf(format, params...)
+	seelog.Info(msg)
+	this.Log(msg)
+}
+
+// 记录错误输出信息
+func (this *Task) LogErrorf(format string, params ...interface{}) {
+	msg := fmt.Sprintf(format, params...)
+	seelog.Error(msg)
+	this.Log(msg)
+}
+
+// 记录警告输出信息
+func (this *Task) LogWarnf(format string, params ...interface{}) {
+	msg := fmt.Sprintf(format, params...)
+	seelog.Warn(msg)
+	this.Log(msg)
 }
