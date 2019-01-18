@@ -10,3 +10,11 @@
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
+
+# Add by HH 2019-01-19
+pala/log
+pala/pala
+pala/pala_program
+pili/pili
+pili/pili_programs
+pili/pili_upload_programs
