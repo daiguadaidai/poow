@@ -15,9 +15,19 @@ func init() {
 // 注册route
 func (this *HostHandler) RegisterV1(group *gin.RouterGroup) {
 	group.GET("/heartbeat/:host", this.Heartbeat)
+	group.GET("/selector", this.ForSelector)
 }
 
 type HostHandler struct{}
+
+// 获取host为前端selector
+func (this *HostHandler) ForSelector(c *gin.Context) {
+	hosts, err := controllers.NewHostController().QueryForSelector()
+	if err != nil {
+		returnError(c, http.StatusInternalServerError, err)
+	}
+	returnSuccess(c, hosts)
+}
 
 // 下载命令
 func (this *HostHandler) Heartbeat(c *gin.Context) {

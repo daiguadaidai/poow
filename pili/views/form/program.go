@@ -14,3 +14,12 @@ func ParseDownloadProgramName(c *gin.Context) (string, error) {
 	}
 	return fileName, nil
 }
+
+type ProgramCreateForm struct {
+	Title         string  `json:"title" form:"titile" binding:"required"`
+	FileName      string  `json:"file_name" form:"file_name" binding:"required"`
+	TmpFileName   string  `json:"tmp_file_name" form:"tmp_file_name" binding:"required"`
+	Params        string  `json:"params" form:"params"`
+	HaveDedicate  bool    `json:"have_dedicate" form:"have_dedicate"`
+	DedicateHosts []int64 `json:"dedicate_hosts" form:"dedicate_hosts"`
+}

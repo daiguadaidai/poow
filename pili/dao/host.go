@@ -87,3 +87,32 @@ func (this *HostDao) UpdateIsValidByHost(host string, isValid bool) error {
 	return this.DB.Model(&models.Host{}).Where("host = ?", host).
 		Update("is_valid", isValid).Error
 }
+
+// 获取选择器需要的东西
+func (this *HostDao) QueryForSelector() ([]models.Host, error) {
+	hosts := []models.Host{}
+	if err := this.DB.Model(&models.Host{}).Select("id, host").
+		Where("is_valid = 1").Find(&hosts).Error; err != nil {
+		return hosts, err
+	}
+	return hosts, nil
+}
+
+// 通过程序id获取hosts
+func (this *HostDao) FindByProgramID(programID int64) ([]*models.Host, error) {
+	sql := `
+SELECT h.*
+FROM program_hosts AS ph
+INNER JOIN hosts AS h
+    ON ph.host_id = h.id
+WHERE ph.program_id = ?
+    AND h.is_valid = 1;
+`
+
+	var hosts []*models.Host
+	if err := this.DB.Raw(sql, programID).Find(&hosts).Error; err != nil {
+		return nil, err
+	}
+
+	return hosts, nil
+}

@@ -116,9 +116,7 @@ func (this *Task) Run() error {
 
 	// 保存执行命令 pid
 	CacheTask(this.TaskUUID, cmd.Process.Pid)
-	defer func() {
-		DestroyTask(this.TaskUUID)
-	}()
+	defer DestroyTask(this.TaskUUID)
 
 	// 记录命令的输出
 	wg.Add(1)

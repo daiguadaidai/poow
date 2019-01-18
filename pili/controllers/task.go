@@ -42,7 +42,7 @@ func (this *TaskController) Start(f *form.TaskStartForm) (*models.Task, error) {
 	// POST 启动命令URL/参数
 	this.SC.GetPalaTaskStartURL(h.Host.String)
 	uuid := utils.GetUUID()
-	postData := f.GetPostData(uuid)
+	postData := f.GetPostData(uuid, this.SC.Address())
 
 	// 创建任务
 	task := &models.Task{
@@ -112,7 +112,7 @@ func (this *TaskController) Update(f *form.UpdateTaskForm) error {
 	return dao.NewTaskDao().UpdateByUUID(f.NewTask())
 }
 
-func (this *TaskController) TailFile(f *form.TailForm) (string, error) {
+func (this *TaskController) TailFile(f *form.TailForm) (interface{}, error) {
 	t, err := dao.NewTaskDao().GetByUUID([]string{"log_path"}, f.TaskUUID)
 	if err != nil {
 		return "", fmt.Errorf("获取日志路径失败. %v", err)
@@ -122,15 +122,11 @@ func (this *TaskController) TailFile(f *form.TailForm) (string, error) {
 	url := this.SC.GetPalaTaskTailURL(t.Host.String)
 	queryMap := make(map[string]interface{})
 	queryMap["size"] = f.Size
+	queryMap["start"] = f.Start
 	queryMap["path"] = t.LogPath.String
 	query := utils.GetURLQuery(queryMap)
 
-	d, err := utils.GetURL(url, query)
-	if err != nil {
-		return "", err
-	}
-
-	return d.(string), nil
+	return utils.GetURL(url, query)
 }
 
 // 查询通过program id task

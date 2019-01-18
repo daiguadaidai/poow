@@ -32,3 +32,17 @@ func TestHostDao_GetByProgramIDAndDedicate_HaveNotDedicate(t *testing.T) {
 
 	fmt.Println(h)
 }
+
+func TestHostDao_FindByProgramID(t *testing.T) {
+	InitDBConfig()
+	hosts, err := NewHostDao().FindByProgramID(100)
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+
+	fmt.Println(hosts)
+
+	for _, host := range hosts {
+		fmt.Println(host)
+	}
+}

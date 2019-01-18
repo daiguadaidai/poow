@@ -80,10 +80,10 @@ func (this *TaskHandler) Tail(c *gin.Context) {
 		return
 	}
 
-	data, err := controllers.NewTaskController().TailFile(form)
+	tailData, err := controllers.NewTaskController().TailFile(form)
 	if err != nil {
 		returnError(c, http.StatusInternalServerError, err)
 		return
 	}
-	returnSuccess(c, data)
+	returnSuccess(c, tailData)
 }

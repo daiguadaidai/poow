@@ -5,6 +5,7 @@ import (
 )
 
 type Host struct {
+	Model
 	IsValid          bool             `json:"is_valid" gorm:"column:is_valid"`
 	IsDedicate       bool             `json:"is_dedicate" gorm:"column:is_dedicate"`
 	Host             types.NullString `json:"host" gorm:"column:host"`

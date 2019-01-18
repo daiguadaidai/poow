@@ -7,8 +7,6 @@ import (
 	"github.com/daiguadaidai/poow/pala/server/task"
 	"github.com/daiguadaidai/poow/pala/views/form"
 	"github.com/daiguadaidai/poow/utils"
-	"github.com/hpcloud/tail"
-	"strings"
 )
 
 type TaskController struct {
@@ -56,23 +54,6 @@ func (this *TaskController) KillTask(uuid string) error {
 }
 
 // 查看文件后几个字节
-func (this *TaskController) TailFile(form *form.TailFileForm) (string, error) {
-	cf := tail.Config{
-		MustExist: true,
-		Location: &tail.SeekInfo{
-			Offset: -form.Size,
-			Whence: 2,
-		},
-	}
-
-	tt, err := tail.TailFile(form.Path, cf)
-	if err != nil {
-		return "", fmt.Errorf("查看日志尾部信息失败. %v", err)
-	}
-
-	lines := make([]string, 1)
-	for line := range tt.Lines {
-		lines = append(lines, line.Text)
-	}
-	return strings.Join(lines, "\n"), nil
+func (this *TaskController) TailFile(form *form.TailFileForm) (*utils.TailData, error) {
+	return utils.TailFile(form.Path, form.Start, form.Size)
 }

@@ -7,18 +7,23 @@ import (
 )
 
 type TaskStartForm struct {
-	Program      string `form:"program" json:"program" binding:"required"`
-	Params       string `form:"params" json:"params"`
-	Pid          int64  `form:"pid", json:"pid"`
-	NeedTaskUUID bool   `form:"need_task_uuid" json:"need_task_uuid"`
+	Program       string `form:"program" json:"program" binding:"required"`
+	Params        string `form:"params" json:"params"`
+	Pid           int64  `form:"pid", json:"pid"`
+	NeedTaskUUID  bool   `form:"need_task_uuid" json:"need_task_uuid"`
+	NeedUpdateAPI bool   `form:"need_update_api" json:"need_update_api"`
 }
 
 // 获取post参数
-func (this TaskStartForm) GetPostData(uuid string) map[string]interface{} {
+func (this TaskStartForm) GetPostData(uuid string, addr string) map[string]interface{} {
 	data := make(map[string]interface{})
 	params := ""
 	if this.NeedTaskUUID {
 		params += fmt.Sprintf("--task-uuid=%s", uuid)
+	}
+	if this.NeedUpdateAPI {
+		api := fmt.Sprintf("http://%s/api/v1/pili/tasks", addr)
+		params += fmt.Sprintf(" --update-api=%#v", api)
 	}
 
 	data["program"] = this.Program
@@ -59,4 +64,5 @@ func (this *UpdateTaskForm) NewTask() *models.Task {
 type TailForm struct {
 	TaskUUID string `form:"task_uuid" json:"task_uuid" binding:"required"`
 	Size     int64  `form:"size" json:"size"`
+	Start    int64  `form:"start" json:"start"`
 }

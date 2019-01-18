@@ -3,9 +3,9 @@ package utils
 import (
 	"fmt"
 	"github.com/cihub/seelog"
+	"io"
 	"os"
 	"path/filepath"
-	"time"
 )
 
 // 文件/目录 是否存在
@@ -64,14 +64,6 @@ func CheckAndCreatePath(_path string, _pathUsage string) error {
 	return nil
 }
 
-// 生成一个全局唯一的文件名
-func CreateUUIDFileName() string {
-	t := time.Now()
-	fileName := fmt.Sprintf("%v", t.Format("20060102150405123456"))
-
-	return fileName
-}
-
 func ChmodFile(_path string) error {
 	return os.Chmod(_path, os.ModePerm)
 }
@@ -109,4 +101,79 @@ func FileSize(filePath string) (int64, error) {
 		return 0, err
 	}
 	return fileInfo.Size(), nil
+}
+
+// 拷贝文件
+func FileCopy(src, std string) error {
+	srcFile, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+
+	stdFile, err := os.Create(std)
+	if err != nil {
+		return err
+	}
+
+	if _, err = io.Copy(srcFile, stdFile); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+type TailData struct {
+	Info string `json:"info"`
+	End  int64  `json:"end"`
+}
+
+const DEFAULT_TAIL_SIZE = 524288
+
+// 读取文件数据
+// return data(数据), end(本次获取结束位点), error(错误)
+func TailFile(filePath string, start int64, size int64) (*TailData, error) {
+	tailData := new(TailData)
+	var offset int64
+	if size == 0 {
+		size = DEFAULT_TAIL_SIZE
+	}
+
+	fileInfo, err := os.Stat(filePath)
+	if err != nil {
+		return tailData, err
+	}
+	f, err := os.Open(filePath)
+	if err != nil {
+		return tailData, err
+	}
+	defer f.Close()
+
+	var b []byte
+	if start == 0 { // 没有指定文件开始字节位点
+		if fileInfo.Size()-size > 0 {
+			start = fileInfo.Size() - size
+			offset = fileInfo.Size() - start
+		} else {
+			size = fileInfo.Size()
+			offset = 0
+		}
+	} else { // 有指定开始位点
+		if fileInfo.Size() <= start { // 没有数据
+			tailData.End = fileInfo.Size()
+			return tailData, nil
+		}
+
+		if fileInfo.Size()-start <= size { // 获取指定大小数据, 能到文件最后
+			offset = start
+			size = fileInfo.Size() - start
+		} else { // 不能到文件最后
+			offset = start
+		}
+	}
+	b = make([]byte, size)
+	n, err := f.ReadAt(b, offset)
+
+	tailData.Info = string(b)
+	tailData.End = start + int64(n)
+	return tailData, nil
 }
