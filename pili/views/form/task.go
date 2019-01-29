@@ -66,3 +66,7 @@ type TailForm struct {
 	Size     int64  `form:"size" json:"size"`
 	Start    int64  `form:"start" json:"start"`
 }
+
+type GetTaskForm struct {
+	TaskUUID string `form:"task_uuid" json:"task_uuid" binding:"required"`
+}

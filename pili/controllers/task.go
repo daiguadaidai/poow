@@ -133,3 +133,7 @@ func (this *TaskController) TailFile(f *form.TailForm) (interface{}, error) {
 func (this *TaskController) QueryByProgramID(pk int64, pg *utils.Paginator) ([]models.Task, error) {
 	return dao.NewTaskDao().QueryByProgramID(pk, pg)
 }
+
+func (this *TaskController) GetByTaskUUID(f *form.GetTaskForm) (*models.Task, error) {
+	return dao.NewTaskDao().GetByUUID([]string{"*"}, f.TaskUUID)
+}

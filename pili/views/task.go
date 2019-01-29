@@ -23,6 +23,7 @@ func (this *TaskHandler) RegisterV1(group *gin.RouterGroup) {
 	group.GET("/running/:uuid", this.TaskRunning)
 	group.GET("/tail", this.TaskTail)
 	group.GET("/program/:pk", this.QueryByProgram)
+	group.GET("/get", this.GetByTaskUUID)
 }
 
 type TaskHandler struct{}
@@ -142,4 +143,21 @@ func (this *TaskHandler) QueryByProgram(c *gin.Context) {
 	}
 
 	returnSuccess(c, tasks)
+}
+
+// 通过task uuid 获取任务
+func (this *TaskHandler) GetByTaskUUID(c *gin.Context) {
+	f, err := form.NewForm(c, &form.GetTaskForm{})
+	if err != nil {
+		returnError(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	task, err := controllers.NewTaskController().GetByTaskUUID(f.(*form.GetTaskForm))
+	if err != nil {
+		returnError(c, http.StatusInternalServerError, err)
+		return
+	}
+
+	returnSuccess(c, task)
 }
