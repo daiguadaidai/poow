@@ -21,17 +21,17 @@ const (
 var dbConfig *DBConfig
 
 type DBConfig struct {
-	Username          string
-	Password          string
-	Database          string
-	CharSet           string
-	Host              string
-	Timeout           int
-	Port              int
-	MaxOpenConns      int
-	MaxIdelConns      int
-	AllowOldPasswords int
-	AutoCommit        bool
+	Username          string `toml:"username"`
+	Password          string `toml:"password"`
+	Database          string `toml:"database"`
+	Charset           string `toml:"charset"`
+	Host              string `toml:"host"`
+	Timeout           int    `toml:"timeout"`
+	Port              int    `toml:"port"`
+	MaxOpenConns      int    `toml:"max_open_conns"`
+	MaxIdelConns      int    `toml:"max_idel_conns"`
+	AllowOldPasswords int    `toml:"allow_old_passwords"`
+	AutoCommit        bool   `toml:"auto_commit"`
 }
 
 /* 新建一个数据库执行器
@@ -60,7 +60,7 @@ func NewDBConfig(
 		Host:              _host,
 		Port:              _port,
 		Database:          _database,
-		CharSet:           _charset,
+		Charset:           _charset,
 		MaxOpenConns:      _maxOpenConns,
 		MaxIdelConns:      _maxIdelConns,
 		Timeout:           _timeout,
@@ -79,7 +79,7 @@ func (this *DBConfig) GetDataSource() string {
 		this.Host,
 		this.Port,
 		this.Database,
-		this.CharSet,
+		this.Charset,
 		this.AllowOldPasswords,
 		this.Timeout,
 		this.AutoCommit,
@@ -103,4 +103,34 @@ func SetDBConfig(_dbConfig *DBConfig) {
 
 func GetDBConfig() *DBConfig {
 	return dbConfig
+}
+
+// 补充默认值
+func (this *DBConfig) SupDefault() {
+	if len(this.Username) == 0 {
+		this.Username = DB_USERNAME
+	}
+	if len(this.Password) == 0 {
+		this.Password = DB_PASSWORD
+	}
+	if len(this.Charset) == 0 {
+		this.Charset = DB_CHARSET
+	}
+	if len(this.Host) == 0 {
+		this.Host = DB_HOST
+	}
+	if this.Port < 1 {
+		this.Port = DB_PORT
+	}
+	if this.Timeout < 0 {
+		this.Timeout = DB_TIMEOUT
+	}
+	if this.MaxOpenConns < 1 {
+		this.MaxOpenConns = DB_MAX_OPEN_CONNS
+	}
+	if this.MaxIdelConns < 1 {
+		this.MaxIdelConns = DB_MAX_IDEL_CONNS
+	}
+	this.AllowOldPasswords = 1
+	this.AutoCommit = DB_AUTO_COMMIT
 }

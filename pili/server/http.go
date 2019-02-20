@@ -12,7 +12,7 @@ import (
 )
 
 // 启动http服务
-func StartHttpServer(_wg *sync.WaitGroup) {
+func StartHttpServer(_wg *sync.WaitGroup, cfg *config.Config) {
 	defer _wg.Done()
 
 	// 注册路由

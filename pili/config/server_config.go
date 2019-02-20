@@ -19,14 +19,14 @@ const (
 var sc *ServerConfig
 
 type ServerConfig struct {
-	ListenHost string // 启动服务绑定的IP
-	ListenPort int    // 启动服务绑定的端口
+	ListenHost string `toml:"listen_host"` // 启动服务绑定的IP
+	ListenPort int    `toml:"listen_port"` // 启动服务绑定的端口
 
-	ProgramPath       string // 命令存放的路径
-	UploadProgramPath string // 上传命令临时使用目录
+	ProgramPath       string `toml:"program_path"`        // 命令存放的路径
+	UploadProgramPath string `toml:"upload_program_path"` // 上传命令临时使用目录
 
-	PalaTaskStartURL string // 通知执行命令的URL
-	PalsTaskTailURL  string
+	PalaTaskStartURL string `toml:"pala_task_start_url"` // 通知执行命令的URL
+	PalaTaskTailURL  string `toml:"pals_task_tail_url"`  //  获取pala日志信息URL
 }
 
 // 设置 piliStartconfig
@@ -76,5 +76,33 @@ func (this *ServerConfig) GetPalaTaskStartURL(host string) string {
 }
 
 func (this *ServerConfig) GetPalaTaskTailURL(host string) string {
-	return fmt.Sprintf(this.PalsTaskTailURL, host)
+	return fmt.Sprintf(this.PalaTaskTailURL, host)
+}
+
+// 补充默认值
+func (this *ServerConfig) SupDefault() {
+	// 启动服务绑定的IP
+	if len(this.ListenHost) == 0 {
+		this.ListenHost = LISTEN_HOST
+	}
+	// 启动服务绑定的端口
+	if this.ListenPort < 1 {
+		this.ListenPort = LISTEN_PORT
+	}
+	// 命令存放的路径
+	if len(this.ProgramPath) == 0 {
+		this.ProgramPath = PROGRAM_PATH
+	}
+	// 上传命令临时使用目录
+	if len(this.UploadProgramPath) == 0 {
+		this.UploadProgramPath = UPLOAD_PROGRAM_PATH
+	}
+	// 通知执行命令的URL
+	if len(this.PalaTaskStartURL) == 0 {
+		this.PalaTaskStartURL = PALA_TASK_START_URL
+	}
+	// 通知pala执行成功 URL
+	if len(this.PalaTaskTailURL) == 0 {
+		this.PalaTaskTailURL = PALA_TASK_TAIL_URL
+	}
 }

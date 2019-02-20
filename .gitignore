@@ -18,3 +18,4 @@ pala/pala_program
 pili/pili
 pili/pili_programs
 pili/pili_upload_programs
+*.toml
