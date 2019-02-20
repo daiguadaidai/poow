@@ -18,11 +18,11 @@ type Task struct {
 	Host       types.NullString `json:"host" gorm:"column:host;not null"`
 	FileName   types.NullString `json:"file_name" gorm:"column:file_name;not null"`
 	Params     types.NullString `json:"params" gorm:"column:params;not null;default:''"`
-	Pid        types.NullInt64  `json:"pid" gorm:"column:pid;not null;default:0"`
 	LogPath    types.NullString `json:"log_path" gorm:"column:log_path;not null;default:''"`
 	NotifyInfo types.NullString `json:"notify_info" gorm:"column:notify_info;not null;default:''"`
 	RealInfo   types.NullString `json:"real_info" gorm:"column:real_info;not null;default:''"`
 	Status     types.NullInt64  `json:"status" gorm:"column:status;not null;default:2"`
+	PUUID      types.NullString `json:"puuid" gorm:"column:puuid;not null;default:''"`
 }
 
 func (Task) TableName() string {

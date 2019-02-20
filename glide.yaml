@@ -12,3 +12,8 @@ import:
   version: ~0.0.3
 - package: github.com/spf13/viper
   version: ~1.2.1
+- package: google.golang.org/appengine
+  repo: https://github.com/golang/appengine
+  vcs: git
+  subpackages:
+  - cloudsql

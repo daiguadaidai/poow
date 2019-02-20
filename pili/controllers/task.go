@@ -25,6 +25,22 @@ func NewTaskController() *TaskController {
 }
 
 func (this *TaskController) Start(f *form.TaskStartForm) (*models.Task, error) {
+	taskDao := dao.NewTaskDao()
+	// 判断指定的父uuid是否存在
+	var ptask *models.Task
+	if f.NeedTaskPUUID {
+		if len(f.PUUID) == 0 {
+			return nil, fmt.Errorf("您没有指定puuid参数")
+		}
+		var err error
+		if ptask, err = taskDao.GetByUUID([]string{"id", "host"}, f.PUUID); err != nil {
+			if err.Error() != "record not found" {
+				return nil, fmt.Errorf("通过指定的puuid: %s 找不到关联的父任务. %v", f.PUUID, err)
+			}
+			return nil, fmt.Errorf("通过指定的puuid: %s 获取符任务出错. %v", f.PUUID, err)
+		}
+	}
+
 	// 获取执行的命令
 	p, err := dao.NewProgramDao().GetByName(f.Program, []string{"id", "have_dedicate"})
 	if err != nil {
@@ -32,15 +48,24 @@ func (this *TaskController) Start(f *form.TaskStartForm) (*models.Task, error) {
 	}
 
 	// 获取执行命令的机器
+	var host string
 	hostDao := dao.NewHostDao()
-	cols := []string{"hosts.id", "hosts.host"}
-	h, err := hostDao.GetByProgramIDAndDedicate(p.ID.Int64, p.HaveDedicate, cols)
-	if err != nil {
-		return nil, fmt.Errorf("失去执行命令机器失败. %v", err)
+	if f.UseParentHost { // 使用父任务的host
+		if ptask == nil {
+			return nil, fmt.Errorf("您指定了使用父任务的机器执行当前命令. 但是您没有执行相关父任务")
+		}
+		host = ptask.Host.String
+	} else { // 新选择host
+		cols := []string{"hosts.id", "hosts.host"}
+		h, err := hostDao.GetByProgramIDAndDedicate(p.ID.Int64, p.HaveDedicate, cols)
+		if err != nil {
+			return nil, fmt.Errorf("失去执行命令机器失败. %v", err)
+		}
+		host = h.Host.String
 	}
 
 	// POST 启动命令URL/参数
-	this.SC.GetPalaTaskStartURL(h.Host.String)
+	this.SC.GetPalaTaskStartURL(host)
 	uuid := utils.GetUUID()
 	postData := f.GetPostData(uuid, this.SC.Address())
 
@@ -48,19 +73,19 @@ func (this *TaskController) Start(f *form.TaskStartForm) (*models.Task, error) {
 	task := &models.Task{
 		TaskUUID:  types.NewNullString(uuid, false),
 		ProgramId: p.ID,
-		Host:      h.Host,
+		Host:      types.NewNullString(host, false),
 		FileName:  types.NewNullString(postData["program"].(string), false),
 		Params:    types.NewNullString(postData["params"].(string), false),
-		Pid:       types.NewNullInt64(f.Pid, false),
+		PUUID:     types.NewNullString(f.PUUID, false),
 		Status:    types.NewNullInt64(models.TASK_STATUS_RUNNING, false),
 	}
-	if err := dao.NewTaskDao().Create(task); err != nil {
+	if err := taskDao.Create(task); err != nil {
 		return nil, fmt.Errorf("创建任务失败. %v, %v. %v", postData["program"],
 			postData["params"], err)
 	}
 
 	// 发post请求给pala进行启动任务
-	if _, err := utils.PostURL(this.SC.GetPalaTaskStartURL(h.Host.String), postData); err != nil {
+	if _, err := utils.PostURL(this.SC.GetPalaTaskStartURL(host), postData); err != nil {
 		switch err.(type) {
 		case *url.Error:
 			hostDao.UpdateIsValidByHost(task.Host.String, false)
@@ -70,8 +95,8 @@ func (this *TaskController) Start(f *form.TaskStartForm) (*models.Task, error) {
 	}
 
 	// host 正在运行该任务数 +1
-	if err := hostDao.IncrTaskByHost(h.Host.String); err != nil {
-		seelog.Warnf("任务启动成功. 添加当前host(%v)任务数失败", h.Host.String)
+	if err := hostDao.IncrTaskByHost(host); err != nil {
+		seelog.Warnf("任务启动成功. 添加当前host(%v)任务数失败", host)
 	}
 
 	return task, nil
