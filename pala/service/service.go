@@ -9,19 +9,19 @@ import (
 	"sync"
 )
 
-func Start(sc *config.ServerConfig) {
+func Start(cfg *config.Config) {
 	defer seelog.Flush()
-	logger, _ := seelog.LoggerFromConfigAsBytes([]byte(config.LogDefautConfig()))
+	logger, _ := seelog.LoggerFromConfigAsBytes([]byte(cfg.LC.Raw()))
 	seelog.ReplaceLogger(logger)
 
 	// 检测和创建指定和需要的目录
-	err := sc.CheckAndStore()
+	err := cfg.SC.CheckAndStore()
 	if err != nil {
 		seelog.Errorf("检测启动配置文件错误: %v", err)
 		return
 	}
 
-	config.SetServerConfig(sc)
+	config.SetServerConfig(cfg.SC)
 
 	wg := new(sync.WaitGroup)
 

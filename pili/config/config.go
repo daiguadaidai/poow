@@ -12,16 +12,16 @@ type Config struct {
 	LC  *LogConfig    `toml:"log"`
 }
 
-var config Config
+var cfg Config
 
 func NewConfig(fPath string) (*Config, error) {
-	if _, err := toml.DecodeFile(fPath, &config); err != nil {
+	if _, err := toml.DecodeFile(fPath, &cfg); err != nil {
 		return nil, err
 	}
 
-	config.SC.SupDefault()  // 补充服务配置文件默认值
-	config.DBC.SupDefault() // 补充数据库配置文件默认值
-	config.LC.SupDefault()  // 补充日志配置文件默认值
+	cfg.SC.SupDefault()  // 补充服务配置文件默认值
+	cfg.DBC.SupDefault() // 补充数据库配置文件默认值
+	cfg.LC.SupDefault()  // 补充日志配置文件默认值
 
-	return &config, nil
+	return &cfg, nil
 }

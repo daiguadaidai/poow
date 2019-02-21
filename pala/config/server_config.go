@@ -29,23 +29,23 @@ const (
 var sc *ServerConfig
 
 type ServerConfig struct {
-	ListenHost string // 启动服务绑定的IP
-	ListenPort int    // 启动服务绑定的端口
+	ListenHost string `toml:"listen_host"` // 启动服务绑定的IP
+	ListenPort int    `toml:"listen_port"` // 启动服务绑定的端口
 
-	ProgramPath        string // 命令存放的路径
-	RunProgramLogPath  string // 运行命令接收日志的输出位置
-	RunProgramParaller int    // 运行命令并发数
-	IsLogDirPrefixDate bool   // 日志的目录是否需要使用日期切割
-	HeartbeatInterval  int    // 心跳检测间隔时间
+	ProgramPath        string `toml:"program_path"`           // 命令存放的路径
+	RunProgramLogPath  string `toml:"run_program_log_path"`   // 运行命令接收日志的输出位置
+	RunProgramParaller int    `toml:"run_program_paraller"`   // 运行命令并发数
+	IsLogDirPrefixDate bool   `toml:"is_log_dir_prefix_date"` // 日志的目录是否需要使用日期切割
+	HeartbeatInterval  int    `toml:"heartbeat_interval"`     // 心跳检测间隔时间
 
-	PiliServer string // 需要访问pili的host
+	PiliServer string `toml:"pili_server"` // 需要访问pili的host
 
-	PiliAPIVersion         string
-	PiliDownloadProgramURL string
-	PiliTaskSuccessURL     string
-	PiliTaskFailURL        string
-	PiliHeartbeatURL       string
-	PiliTaskUpdateURL      string
+	PiliAPIVersion         string `toml:"pili_api_version"`          // pili API version
+	PiliDownloadProgramURL string `toml:"pili_download_program_url"` // pili 下载命令API
+	PiliTaskSuccessURL     string `toml:"pili_task_success_url"`     // pili 通知任务成功API
+	PiliTaskFailURL        string `toml:"pili_task_fail_url"`        // pili 通知任务失败API
+	PiliHeartbeatURL       string `toml:"pili_heartbeat_url"`        // pili 心跳检测API
+	PiliTaskUpdateURL      string `toml:"pili_task_update_url"`      // pili 任务更新API
 }
 
 // 设置 palaStartconfig
@@ -131,4 +131,60 @@ func (this *ServerConfig) GetPiliHeartbeatURL(host string) string {
 // 更新任务接口
 func (this *ServerConfig) GetPiliTaskUpdateURL() string {
 	return fmt.Sprintf(this.PiliTaskUpdateURL, this.PiliServer, this.PiliAPIVersion)
+}
+
+// 补充默认值
+func (this *ServerConfig) SupDefault() {
+	// 启动服务绑定的IP
+	if len(this.ListenHost) == 0 {
+		this.ListenHost = LISTEN_HOST
+	}
+	// 启动服务绑定的端口
+	if this.ListenPort < 1 {
+		this.ListenPort = LISTEN_PORT
+	}
+	// 命令存放的路径
+	if len(this.ProgramPath) == 0 {
+		this.ProgramPath = PROGRAM_PATH
+	}
+	// 运行命令接收日志的输出位置
+	if len(this.RunProgramLogPath) == 0 {
+		this.RunProgramLogPath = RUN_PROGRAM_LOG_PATH
+	}
+	// 运行命令并发数
+	if this.RunProgramParaller < 1 {
+		this.RunProgramParaller = RUN_PROGRAM_PARALLER
+	}
+	// 心跳检测间隔时间
+	if this.HeartbeatInterval < 1 {
+		this.HeartbeatInterval = HEARTBEAT_INTERVAL
+	}
+	// 需要访问pili的host
+	if len(this.PiliServer) < 0 {
+		this.PiliServer = PILI_SERVER
+	}
+	// pili API version
+	if len(this.PiliAPIVersion) == 0 {
+		this.PiliAPIVersion = PILI_API_VERSTION
+	}
+	// pili 下载命令API
+	if len(this.PiliDownloadProgramURL) == 0 {
+		this.PiliDownloadProgramURL = PILI_DOWNLOAD_PROGRAM_URL
+	}
+	// pili 通知任务成功API
+	if len(this.PiliTaskSuccessURL) == 0 {
+		this.PiliTaskSuccessURL = PILI_TASK_SUCCESS_URL
+	}
+	// pili 通知任务失败API
+	if len(this.PiliTaskFailURL) == 0 {
+		this.PiliTaskFailURL = PILI_TASK_FAIL_URL
+	}
+	// pili 心跳检测API
+	if len(this.PiliHeartbeatURL) == 0 {
+		this.PiliHeartbeatURL = PILI_HEARTBEAT_URL
+	}
+	// pili 任务更新API
+	if len(this.PiliTaskUpdateURL) == 0 {
+		this.PiliTaskUpdateURL = PILI_TASK_UPDATE_URL
+	}
 }
