@@ -61,7 +61,7 @@ func initConfig() {
 	var err error
 	cfg, err = config.NewConfig(cfgPath)
 	if err != nil {
-		fmt.Println("解析配置文件错误: %s", err.Error())
+		fmt.Printf("解析配置文件错误: %s\n", err.Error())
 		os.Exit(1)
 	}
 }

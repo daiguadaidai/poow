@@ -1,0 +1,13 @@
+[Unit]
+Description=Pala is Panlong sub features, use run task
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/usr/local/panlong/bin
+ExecStart=/bin/bash -c '/usr/local/panlong/bin/pala --config=/etc/panlong/pala.toml >> /data/www/panlong/pala/logs/pala.log 2>&1'
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

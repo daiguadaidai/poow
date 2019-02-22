@@ -1,8 +1,8 @@
 [server]
 listen_host="0.0.0.0"    # 启动服务绑定的IP
 listen_port=19528    # 启动服务绑定的端口
-program_path="/tmp/panlong/program"    # 命令存放的路径
-upload_program_path="/tmp/panlong/upload_program"    # 上传命令临时使用目录
+program_path="/data0/www/panlong/pili/programs"    # 命令存放的路径
+upload_program_path="/data0/www/panlong/pili/upload_programs"    # 上传命令临时使用目录
 pala_task_start_url="http://%s:19529/api/v1/pala/tasks/start"    # 通知执行命令的URL
 pals_task_tail_url="http://%s:19529/api/v1/pala/tasks/tail"     # 获取pala日志信息URL
 
@@ -18,7 +18,7 @@ max_open_conns=100
 max_idel_conns=100
 
 [log]
-path=""    # 日志路径, 没有填写打印到控制台
+# path="/data0/www/panlong/pili/logs"    # 日志路径, 没有填写打印到控制台
 level="debug"
 file_size=1073741824    # 每个日志文件的大小
 file_keep_size=10    # 历史日志文件保存个数

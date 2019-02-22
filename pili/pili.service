@@ -1,0 +1,13 @@
+[Unit]
+Description=Pili is Panlong sub features, use distribute task
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/usr/local/panlong/bin
+ExecStart=/bin/bash -c '/usr/local/panlong/bin/pili --config=/etc/panlong/pili.toml >> /data0/www/panlong/pili/logs/pili.log 2>&1'
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

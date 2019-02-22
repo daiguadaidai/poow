@@ -1,8 +1,8 @@
 [server]
 listen_host="0.0.0.0"    # 启动服务绑定的IP
 listen_port=19529     # 启动服务绑定的端口
-program_path="/data/panlong/pala/programs"    # 命令存放的路径
-run_program_log_path="/data/panlong/pala/logs"    # 运行命令接收日志的输出位置
+program_path="/data0/www/panlong/pala/programs"    # 命令存放的路径
+run_program_log_path="/data0/www/panlong/pala/logs"    # 运行命令接收日志的输出位置
 run_program_paraller=8    # 运行命令并发数
 is_log_dir_prefix_date=true    # 日志的目录是否需要使用日期切割
 heartbeat_interval=60    # 心跳检测间隔时间
@@ -11,11 +11,11 @@ pili_api_version="api/v1"     # pili api版本
 pili_download_program_url="http://%s/%s/pili/programs/download/%s"    # pili 下载命令API
 pili_task_success_url="http://%s/%s/pili/tasks/success/%s"     # pili 通知任务成功API
 pili_task_fail_url="http://%s/%s/pili/tasks/fail/%s"       # pili 通知任务失败API
-pili_heartbeat_url="http://%s/%s/pili/tasks/heartbeat/%s"       # pili 心跳检测API
+pili_heartbeat_url="http://%s/%s/pili/hosts/heartbeat/%s"       # pili 心跳检测API
 pili_task_update_url="http://%s/%s/pili/tasks"     # pili 任务更新API
 
 [log]
-path=""    # 日志路径, 没有填写打印到控制台
+# path="/data0/www/panlong/pala/logs/"    # 日志路径, 没有填写打印到控制台
 level="debug"
 file_size=1073741824    # 每个日志文件的大小
 file_keep_size=10    # 历史日志文件保存个数

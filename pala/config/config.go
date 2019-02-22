@@ -1,7 +1,6 @@
 package config
 
 import (
-	"fmt"
 	"github.com/BurntSushi/toml"
 )
 
@@ -23,9 +22,6 @@ func NewConfig(fPath string) (*Config, error) {
 
 	cfg.SC.SupDefault() // 补充服务配置文件默认值
 	cfg.LC.SupDefault() // 补充日志配置文件默认值
-
-	fmt.Println(cfg.SC)
-	fmt.Println(cfg.LC)
 
 	return &cfg, nil
 }
